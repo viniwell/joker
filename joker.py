@@ -2,16 +2,17 @@ import easygui as g
 import games, cards
 import random
 TITLE='Game'
-RANKS_W = ["Tуз", "Двойка", "Тройка", "Четверка", "Пятерка", "Шестерка", "Семерка",
-             "Восьмерка", "Девятка", "Десятка", "Bалет", "Дама", "Король",'Джокер']
+
+RANKS_W = ["Двойка", "Тройка", "Четверка", "Пятерка", "Шестерка", "Семерка",
+             "Восьмерка", "Девятка", "Десятка", "Bалет", "Дама", "Король","Tуз",'Джокер']
 RANKS = ["1", "2", "3", "4", "5", "6", "7",
              "8", "9", "10", "11", "12", "13",'14']
 SUITS = ['s','c','h','d']
 class J_Card(cards.Card):
     def __str__(self):
-        return self.suit+str(int(self.rank)//10)+str(int(self.rank)%10)+'.png'
+        return 'assets/'+self.suit+str(int(self.rank)//10)+str(int(self.rank)%10)+'.png'
 class Reg_pl:
-    def __init__(self,name='',bet=0, money=100, pl_num=None):
+    def __init__(self,name='',bet=50, money=100, pl_num=None):
         self.bet=bet
         self.money=money
         self.name=name
@@ -19,19 +20,22 @@ class Reg_pl:
     def __str__(self):
         return f'{self.name}-{self.money}'
     def registration(self):
-        if self.pl_num:
+        if not self.name:
             self.name=f'Player {self.pl_num}'
         reg=g.multenterbox(f'Registration\n{str(self)}',title=TITLE, fields=['name', 'bet'], values=(self.name, self.bet))
         self.name=reg[0]
-        while 2*int(reg[1])>=self.money or int(reg[1])>50:
+        while 2*int(reg[1])>self.money or int(reg[1])>50:
             reg=g.multenterbox(f'Registration\n{str(self)}',title=TITLE, fields=['name', 'bet'], values=[self.name, self.bet])
         self.bet=int(reg[1])
 class Bankomet(Reg_pl):
     def registration(self):
-        pass
-    def __init__(self, money=100):
-        super().__init__()
-        self.name='Bankomet'
+        self.name=g.enterbox('Enter your name(you are bankomet)',title='Registration', default=self.name)
+    def __str__(self):
+        return self.name+'(Bankomet)-'+"self.money"
+    def __init__(self, name='',money=100,pl_num=None):
+        self.name=name
+        if not self.name:
+            self.name=f'Player {pl_num}'
         self.money=money
     def megawin(self, losers):
         for loser in losers:
@@ -67,32 +71,45 @@ class Game:
         self.games=1
         self.players=[]
         bank_num=random.randint(0, num-1)
-        pl_num=0
         for i in range(self.num):
             if i==bank_num:
-                self.bankomet=Bankomet()
+                self.bankomet=Bankomet(pl_num=i+1)
                 self.bankomet.registration()
             else:
-                pl_num+=1
-                player=Reg_pl(pl_num=pl_num)
+                player=Reg_pl(pl_num=i+1)
                 player.registration()
                 self.players.append(player)
         self.deck=J_Deck()
         self.deck.populate()
         self.deck.shuffle()
+    def check(self):
+        poor_pl=[]
+        for pl in self.players+[self.bankomet]:
+            if pl.money<=0:
+                self.players.remove(pl)
+                self.num-=1
+                poor_pl.append(pl)
+        if poor_pl:
+            AGAIN=g.ynbox('Players '+','.join(player.name for player in poor_pl)+'were removed from the table:(\nContinue?')
+
+
     def play(self):
+        self.deck.clear()
+        self.deck.populate()
+        self.deck.shuffle()
         self.games+=1
         if self.games!=2:
-            bank_num=random.randint(0, self.num-2)
+            bank_num=random.randint(0, self.num-1)
             for i in range(self.num):
                 if i==bank_num:
-                    self.bankomet, self.players[i]=Bankomet(self.players[i].money),Reg_pl(pl_num=i,money=self.bankomet.money)
+                    self.bankomet, self.players[i]=Bankomet(name=self.players[i].name,money=self.players[i].money),Reg_pl(pl_num=i,money=self.bankomet.money,name=self.bankomet.name)
+            self.bankomet.registration()
             for pl in self.players:
                 pl.registration()
         bank_lose=True
-        for i in range(13,0, -1):
+        for i in range(13,-1, -1):
             g.msgbox('Bankomet:'+str(RANKS_W[i])+'\nCard:', image=str(self.deck.cards[0]))
-            if int(self.deck.cards[0].rank)==i+1:
+            if int(self.deck.cards[0].rank)==i+2:
                 bank_lose=False
 
                 if i==13:
@@ -104,12 +121,14 @@ class Game:
             self.deck.cards.remove(self.deck.cards[0])
         if bank_lose:
             self.bankomet.lose(self.players)
+        self.check()
 def main():
     game=Game()
-    again=True
-    while again:
+    AGAIN=True
+    while AGAIN:
         game.play()
-        again=games.ask_yes_no('Do you want to continue game?')
+
+        AGAIN=games.ask_yes_no('Do you want to continue game?')
     else:
-        g.msgbox('\n'.join(str(pl) for pl in [game.bankomet]+game.players), title='Resaults')
+        g.msgbox('\n'.join(str(pl) for pl in [game.bankomet]+game.players)+'\nThanks for playing!', title='Resaults')
 main()
