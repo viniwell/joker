@@ -123,6 +123,7 @@ class Game:
             self.bankomet.lose(self.players)
         self.check()
 def main():
+    g.msgbox("Welcome into the 'Joker' game!",)
     game=Game()
     AGAIN=True
     while AGAIN:
