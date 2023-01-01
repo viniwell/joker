@@ -31,7 +31,7 @@ class Bankomet(Reg_pl):
     def registration(self):
         self.name=g.enterbox('Enter your name(you are bankomet)',title='Registration', default=self.name)
     def __str__(self):
-        return self.name+'(Bankomet)-'+"self.money"
+        return self.name+'(Bankomet)-'+str(self.money)
     def __init__(self, name='',money=100,pl_num=None):
         self.name=name
         if not self.name:
@@ -83,14 +83,26 @@ class Game:
         self.deck.populate()
         self.deck.shuffle()
     def check(self):
-        poor_pl=[]
-        for pl in self.players+[self.bankomet]:
-            if pl.money<=0:
-                self.players.remove(pl)
+        if self.num<2:
+            AGAIN=False
+            g.msgbox("There are less 2 players left:(it's end of the game")
+        else:
+            poor_pl=[]
+            for pl in self.players:
+                if pl.money<=0:
+                    self.players.remove(pl)
+                    self.num-=1
+                    poor_pl.append(pl)
+            if self.bankomet.money<=0:
+                poor_pl.append(self.bankomet)
                 self.num-=1
-                poor_pl.append(pl)
-        if poor_pl:
-            AGAIN=g.ynbox('Players '+','.join(player.name for player in poor_pl)+'were removed from the table:(\nContinue?')
+                self.bankomet=None
+            
+            if poor_pl:
+                AGAIN=g.ynbox('Players '+','.join(player.name for player in poor_pl)+' were removed from the table:(\nContinue?')
+            else:
+                AGAIN=games.ask_yes_no('Do you want to continue game?')
+        return AGAIN
 
 
     def play(self):
@@ -102,14 +114,19 @@ class Game:
             bank_num=random.randint(0, self.num-1)
             for i in range(self.num):
                 if i==bank_num:
-                    self.bankomet, self.players[i]=Bankomet(name=self.players[i].name,money=self.players[i].money),Reg_pl(pl_num=i,money=self.bankomet.money,name=self.bankomet.name)
+                    if self.bankomet:
+                        self.bankomet, self.players[i]=Bankomet(name=self.players[i].name,money=self.players[i].money),Reg_pl(pl_num=i,money=self.bankomet.money,name=self.bankomet.name)
+                    else:
+                        self.bankomet=Bankomet(name=self.players[i].name, money=self.players[i].money)
+                        self.players.remove(self.players[i])
+                        self.num-=1
             self.bankomet.registration()
             for pl in self.players:
                 pl.registration()
         bank_lose=True
         for i in range(13,-1, -1):
-            g.msgbox('Bankomet:'+str(RANKS_W[i])+'\nCard:', image=str(self.deck.cards[0]))
-            if int(self.deck.cards[0].rank)==i+2:
+            g.msgbox('Bankomet:'+str(RANKS_W[i])+'!'+'\nCard:', image=str(self.deck.cards[0]))
+            if (int(self.deck.cards[0].rank)==i+2 and self.deck.cards[0].rank in RANKS[:12]) or (int(self.deck.cards[0].rank)==i+1 and self.deck.cards[0].rank in RANKS[12:]):
                 bank_lose=False
 
                 if i==13:
@@ -121,15 +138,21 @@ class Game:
             self.deck.cards.remove(self.deck.cards[0])
         if bank_lose:
             self.bankomet.lose(self.players)
-        self.check()
 def main():
-    g.msgbox("Welcome into the 'Joker' game!",)
+    g.msgbox("Welcome into the 'Joker' game!",image='assets/unnamed.png')
+    rules=g.ynbox('Would you like to read rules of the game?', title=TITLE)
+    if rules:
+        g.msgbox('''Количество колод: 1
+Количество карт в колоде: 52 и 2 джокера
+Количество игроков: любое
+Старшинство карт: 2, 3, 4, 5, 6, 7, 8, 9, 10, В, Д, К, Т, Джокер.
+Цель игры: в роли банкомета угадать карту и забрать все ставки.
+Правила игры. Сдатчик он же банкомет определяется следующим образом. Каждому игроку предлагается вытащить по одной карте из колоды, игрок, у которого карта старше, становится банкометом. После этого банкомет карты тщательно тасует, снимает и предлагает всем игрокам сделать ставки. Игроки заранее договариваются о потолке ставки, что больше определенной суммы ставить нельзя, например 10 рублей. После того, как все ставки были сделаны, банкомет начинает игру. С верхней части колоды он снимает и открывает по одной 14 карт. Одновременно с открытием карты он называет ее по достоинству. Называть он должен строго по порядку, начинать должен с джокера, а заканчивать двойкой. Например: джокер, туз, король, дама, валет и так до двойки. Если банкомет угадывает хоть одну карту, то весь банк (все ставки) достаются ему и он выигрывает. Если банкомет угадывает первую карту, то есть джокера, то ставки удваиваются и каждый игрок должен доложить банкомету ту сумму денег, которую он ставил. После этого игра начинается заново. Банкомет, который не угадал ни одной карты из четырнадцати, платит всем игрокам их объявленные ставки и передает карты для банкования следующему игроку по часовой стрелке, то есть слева.''')
     game=Game()
     AGAIN=True
     while AGAIN:
         game.play()
-
-        AGAIN=games.ask_yes_no('Do you want to continue game?')
+        AGAIN=game.check()
     else:
         g.msgbox('\n'.join(str(pl) for pl in [game.bankomet]+game.players)+'\nThanks for playing!', title='Resaults')
 main()
