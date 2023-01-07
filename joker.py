@@ -85,7 +85,7 @@ class Game:
     def check(self):
         if self.num<2:
             AGAIN=False
-            g.msgbox("There are less 2 players left:(it's end of the game")
+            g.msgbox("There are less 2 players left:(\nIt's end of the game")
         else:
             poor_pl=[]
             for pl in self.players:
@@ -126,7 +126,7 @@ class Game:
         bank_lose=True
         for i in range(13,-1, -1):
             g.msgbox('Bankomet:'+str(RANKS_W[i])+'!'+'\nCard:', image=str(self.deck.cards[0]))
-            if (int(self.deck.cards[0].rank)==i+2 and self.deck.cards[0].rank in RANKS[:12]) or (int(self.deck.cards[0].rank)==i+1 and self.deck.cards[0].rank in RANKS[12:]):
+            if (int(self.deck.cards[0].rank)==i+2 and self.deck.cards[0].rank in RANKS[:13]) or (int(self.deck.cards[0].rank)==i+1 and self.deck.cards[0].rank in RANKS[12:]):
                 bank_lose=False
 
                 if i==13:
