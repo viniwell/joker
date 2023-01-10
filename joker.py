@@ -6,12 +6,12 @@ TITLE='Game'
 
 RANKS_W = ["Двойка", "Тройка", "Четверка", "Пятерка", "Шестерка", "Семерка",
              "Восьмерка", "Девятка", "Десятка", "Bалет", "Дама", "Король","Tуз",'Джокер']
-RANKS = ["1", "2", "3", "4", "5", "6", "7",
+RANKS = ['1',"2", "3", "4", "5", "6", "7",
              "8", "9", "10", "11", "12", "13",'14']
 SUITS = ['s','c','h','d']
 class J_Card(cards.Card):
     def __str__(self):
-        return 'assets/'+os.path.join(self.suit+str(int(self.rank)//10)+str(int(self.rank)%10)+'.png')
+        return 'assets/'+os.path.join(self.suit+str((int(self.rank))//10)+str((int(self.rank))%10)+'.png')
 class Reg_pl:
     def __init__(self,name='',bet=50, money=100, pl_num=None):
         self.bet=bet
@@ -84,25 +84,26 @@ class Game:
         self.deck.populate()
         self.deck.shuffle()
     def check(self):
-        if self.num<2:
-            AGAIN=False
-            g.msgbox("There are less 2 players left:(\nIt's end of the game")
-        else:
-            poor_pl=[]
-            for pl in self.players:
-                if pl.money<=0:
-                    self.players.remove(pl)
-                    self.num-=1
-                    poor_pl.append(pl)
-            if self.bankomet.money<=0:
-                poor_pl.append(self.bankomet)
+        poor_pl=[]
+        for pl in self.players:
+            if pl.money<=0:
+                self.players.remove(pl)
                 self.num-=1
-                self.bankomet=None
-            
-            if poor_pl:
-                AGAIN=g.ynbox('Players '+','.join(player.name for player in poor_pl)+' were removed from the table:(\nContinue?')
-            else:
-                AGAIN=games.ask_yes_no('Do you want to continue game?')
+                poor_pl.append(pl)
+        if self.bankomet.money<=0:
+            poor_pl.append(self.bankomet)
+            self.num-=1
+            rand_pl=self.players[random.randint(0,self.num)]
+            last_bankomet=self.bankomet
+            self.bankomet, self.players[self.players.index(rand_pl)]=Bankomet(name=rand_pl.name, pl_num=rand_pl.pl_num), self.bankomet
+            self.players.remove(last_bankomet)
+        for i in poor_pl:
+            if i in self.players:
+                self.players.remove(i)
+        if poor_pl:
+            AGAIN=g.ynbox('Players '+','.join(player.name for player in poor_pl)+' were removed from the table:(\nContinue?')
+        else:
+            AGAIN=games.ask_yes_no('Do you want to continue game?')
         return AGAIN
 
 
@@ -110,6 +111,7 @@ class Game:
         self.deck.clear()
         self.deck.populate()
         self.deck.shuffle()
+        self.num=int(len(self.players))
         self.games+=1
         if self.games!=2:
             bank_num=random.randint(0, self.num-1)
@@ -125,9 +127,9 @@ class Game:
             for pl in self.players:
                 pl.registration()
         bank_lose=True
-        for i in range(13,-1, -1):
-            g.msgbox('Bankomet:'+str(RANKS_W[i])+'!'+'\nCard:', image=str(self.deck.cards[0]))
-            if (int(self.deck.cards[0].rank)==i+2 and self.deck.cards[0].rank in RANKS[:13]) or (int(self.deck.cards[0].rank)==i+1 and self.deck.cards[0].rank in RANKS[12:]):
+        for i in range(14,0, -1):
+            g.msgbox('Bankomet:'+str(RANKS_W[i-1])+'!'+'\nCard:', image=str(self.deck.cards[0]))
+            if i==RANKS.index(self.deck.cards[0].rank):
                 bank_lose=False
 
                 if i==13:
