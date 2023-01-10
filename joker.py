@@ -139,7 +139,7 @@ class Game:
         if bank_lose:
             self.bankomet.lose(self.players)
 def main():
-    g.msgbox("Welcome into the 'Joker' game!",image='assets/unnamed.png')
+    g.msgbox("Welcome into the 'Joker' game!",image='assets/joker.png')
     rules=g.ynbox('Would you like to read rules of the game?', title=TITLE)
     if rules:
         g.msgbox('''Количество колод: 1
