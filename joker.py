@@ -1,6 +1,7 @@
 import easygui as g
 import games, cards
 import random
+import os
 TITLE='Game'
 
 RANKS_W = ["Двойка", "Тройка", "Четверка", "Пятерка", "Шестерка", "Семерка",
@@ -10,7 +11,7 @@ RANKS = ["1", "2", "3", "4", "5", "6", "7",
 SUITS = ['s','c','h','d']
 class J_Card(cards.Card):
     def __str__(self):
-        return 'assets/'+self.suit+str(int(self.rank)//10)+str(int(self.rank)%10)+'.png'
+        return 'assets/'+os.path.join(self.suit+str(int(self.rank)//10)+str(int(self.rank)%10)+'.png')
 class Reg_pl:
     def __init__(self,name='',bet=50, money=100, pl_num=None):
         self.bet=bet
